@@ -42,12 +42,16 @@ class Icon implements Comparable<Icon> {
 }
 
 class Favicon {
-  static Future<List<Icon>> getAll(String url, {List<String>? suffixes}) async {
+  static Future<List<Icon>> getAll(
+    String url, {
+    List<String>? suffixes,
+    Map<String, String>? headers,
+  }) async {
     var favicons = <Icon>[];
     var iconUrls = <String>[];
 
     var uri = Uri.parse(url);
-    var document = parse((await http.get(uri)).body);
+    var document = parse((await http.get(uri, headers: headers)).body);
 
     // Look for icons in tags
     for (var rel in ['icon', 'shortcut icon']) {
@@ -135,15 +139,12 @@ class Favicon {
       if (response.bodyBytes.length < 4) return false;
 
       // Check if ico file contains a valid image signature
-      if (!_verifySignature(response.bodyBytes, ICO_SIG) &&
-          !_verifySignature(response.bodyBytes, PNG_SIG)) {
+      if (!_verifySignature(response.bodyBytes, ICO_SIG) && !_verifySignature(response.bodyBytes, PNG_SIG)) {
         return false;
       }
     }
 
-    return response.statusCode == 200 &&
-        (response.contentLength ?? 0) > 0 &&
-        contentType.contains('image');
+    return response.statusCode == 200 && (response.contentLength ?? 0) > 0 && contentType.contains('image');
   }
 
   static bool _verifySignature(Uint8List bodyBytes, List<int> signature) {
